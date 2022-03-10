@@ -1,0 +1,34 @@
+{
+  "name": "@saus/imagetools",
+  "version": "0.1.0",
+  "description": "Transform images with querystrings",
+  "license": "MIT",
+  "main": "dist/plugin.js",
+  "module": "dist/plugin.mjs",
+  "types": "index.d.ts",
+  "files": [
+    "src",
+    "dist",
+    "index.d.ts"
+  ],
+  "scripts": {
+    "build": "rimraf dist && tsup",
+    "dev": "tsup --watch",
+    "prepare": "yarn build"
+  },
+  "dependencies": {
+    "debug": "^4.3.2",
+    "imagetools-core": "^3.0.2",
+    "is-image": "^3.0.0",
+    "kleur": "^4.1.4",
+    "sharp": "^0.29.3"
+  },
+  "peerDependencies": {
+    "saus": "*"
+  },
+  "devDependencies": {
+    "@types/sharp": "^0.29.5",
+    "saus": "*",
+    "tsup": "^5.12.0"
+  }
+}
