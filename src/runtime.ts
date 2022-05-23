@@ -13,7 +13,7 @@ import isImage from 'is-image'
 import path from 'path'
 import { Endpoint, md5Hex } from 'saus/core'
 import { Headers } from 'saus/http'
-import sharp from 'sharp'
+import sharp, { Sharp } from 'sharp'
 import { ImageCache } from './utils/cache'
 
 type Awaitable<T> = T | PromiseLike<T>
@@ -66,7 +66,7 @@ export function serveImages<Params extends {}>(
   }
 
   return async req => {
-    if (!isImage(req.path) || !req.search) {
+    if (!isImage(req.path)) {
       return
     }
     const reqExtension = path.extname(req.path)
@@ -92,22 +92,30 @@ export function serveImages<Params extends {}>(
       '.' +
       req.searchParams.get('format')
 
-    let image = await cache?.read(imageId)
-    if (!image) {
-      let imageData = await load(req)
-      if (!imageData) {
-        return
-      }
+    let image: Sharp
+
+    const cachedImage = await cache?.read(imageId)
+    if (cachedImage) {
+      image = cachedImage
+    } else {
+      const imageData = await load(req)
+      if (!imageData) return
 
       image = sharp(imageData)
 
-      const removeExifData =
-        typeof options.removeExifData == 'function'
-          ? await options.removeExifData(req)
-          : options.removeExifData || false
+      if (imageConfig) {
+        const removeExifData =
+          typeof options.removeExifData == 'function'
+            ? await options.removeExifData(req)
+            : options.removeExifData || false
 
-      const { transforms } = generateTransforms(imageConfig, factories)
-      image = (await applyTransforms(transforms, image, removeExifData)).image
+        const { transforms } = generateTransforms(imageConfig, factories)
+        image = (await applyTransforms(transforms, image, removeExifData)).image
+      } else {
+        // Ensure metadata is attached.
+        await applyTransforms([], image)
+      }
+
       cache?.write(imageId, image)
     }
 
